@@ -321,6 +321,18 @@ bool SVFUtil::matchArgs(const SVFInstruction* cs, const SVFFunction* callee)
 {
     if (callee->isVarArg() || ThreadAPI::getThreadAPI()->isTDFork(cs))
         return getSVFCallSite(cs).arg_size() >= callee->arg_size();
-    else
-        return getSVFCallSite(cs).arg_size() == callee->arg_size();
+    else {
+        if(getSVFCallSite(cs).arg_size() != callee->arg_size()) return false;
+
+        auto cs_inst = dyn_cast<SVFCallInst>(cs);
+        for(unsigned int i = 0; i < callee->arg_size(); i++) {
+            auto callee_arg = callee->getArg(i);
+            auto cs_arg = cs_inst->getArgOperand(i);
+            if(callee_arg->getType() != cs_arg->getType()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }
